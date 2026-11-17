@@ -6,6 +6,8 @@ namespace OCN_Project.Data;
 /// <summary>
 /// DbContext del proyecto OCN. Mapea el esquema ocn de la base proyecto_ocn
 /// (database-first: la base ya existe, no se generan migraciones).
+/// Todas las relaciones se declaran explícitamente para que EF use las
+/// columnas FK existentes (idzona, idproblematica, etc.).
 /// </summary>
 public class OcnDbContext : DbContext
 {
@@ -93,12 +95,76 @@ public class OcnDbContext : DbContext
     public DbSet<PrioridadCalculada> PrioridadesCalculada { get; set; } = null!;
     public DbSet<BrechaAtencion> BrechasAtencion { get; set; } = null!;
 
+    // ---- módulo registros OCN ----
+    public DbSet<RegistroOcn> RegistrosOcn { get; set; } = null!;
+
     // ---- auditoría ----
     public DbSet<Auditoria> Auditorias { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("ocn");
+
+        // ---------- mapeo entidad -> tabla física (esquema ocn) ----------
+        modelBuilder.Entity<Rol>().ToTable("rol");
+        modelBuilder.Entity<Usuario>().ToTable("usuario");
+        modelBuilder.Entity<UsuarioRol>().ToTable("usuariorol");
+        modelBuilder.Entity<DivisionTerritorial>().ToTable("divisionterritorial");
+        modelBuilder.Entity<CatTipoZona>().ToTable("cattipozona");
+        modelBuilder.Entity<Zona>().ToTable("zona");
+        modelBuilder.Entity<Periodo>().ToTable("periodo");
+        modelBuilder.Entity<CatMetodo>().ToTable("catmetodo");
+        modelBuilder.Entity<Instrumento>().ToTable("instrumento");
+        modelBuilder.Entity<Levantamiento>().ToTable("levantamiento");
+        modelBuilder.Entity<LevantamientoInstrumento>().ToTable("levantamientoinstrumento");
+        modelBuilder.Entity<LevantamientoResponsable>().ToTable("levantamientoresponsable");
+        modelBuilder.Entity<LevantamientoFuente>().ToTable("levantamientofuente");
+        modelBuilder.Entity<CatTipoFuente>().ToTable("cattipofuente");
+        modelBuilder.Entity<CatTipoOrganizacion>().ToTable("cattipoorganizacion");
+        modelBuilder.Entity<Organizacion>().ToTable("organizacion");
+        modelBuilder.Entity<Fuente>().ToTable("fuente");
+        modelBuilder.Entity<Observacion>().ToTable("observacion");
+        modelBuilder.Entity<ObservacionFuente>().ToTable("observacionfuente");
+        modelBuilder.Entity<CatGrupoPoblacional>().ToTable("catgrupopoblacional");
+        modelBuilder.Entity<ObservacionGrupoPoblacional>().ToTable("observaciongrupopoblacional");
+        modelBuilder.Entity<CategoriaProblematica>().ToTable("categoriaproblematica");
+        modelBuilder.Entity<Problematica>().ToTable("problematica");
+        modelBuilder.Entity<CatMagnitud>().ToTable("catmagnitud");
+        modelBuilder.Entity<CatGravedad>().ToTable("catgravedad");
+        modelBuilder.Entity<CatFrecuencia>().ToTable("catfrecuencia");
+        modelBuilder.Entity<CatTendencia>().ToTable("cattendencia");
+        modelBuilder.Entity<ObservacionProblematica>().ToTable("observacionproblematica");
+        modelBuilder.Entity<TendenciaProblematica>().ToTable("tendenciaproblematica");
+        modelBuilder.Entity<Necesidad>().ToTable("necesidad");
+        modelBuilder.Entity<ProblematicaNecesidad>().ToTable("problematicanecesidad");
+        modelBuilder.Entity<CatFactorRiesgo>().ToTable("catfactorriesgo");
+        modelBuilder.Entity<ProblematicaFactorRiesgo>().ToTable("problematicafactorriesgo");
+        modelBuilder.Entity<CatFactorProtector>().ToTable("catfactorprotector");
+        modelBuilder.Entity<ProblematicaFactorProtector>().ToTable("problematicafactorprotector");
+        modelBuilder.Entity<CatTipoRecurso>().ToTable("cattiporecurso");
+        modelBuilder.Entity<CatEstadoRecurso>().ToTable("catestadorecurso");
+        modelBuilder.Entity<CatCostoRecurso>().ToTable("catcostorecurso");
+        modelBuilder.Entity<Recurso>().ToTable("recurso");
+        modelBuilder.Entity<FactorProtectorRecurso>().ToTable("factorprotectorrecurso");
+        modelBuilder.Entity<CatServicio>().ToTable("catservicio");
+        modelBuilder.Entity<RecursoServicio>().ToTable("recursoservicio");
+        modelBuilder.Entity<ServicioNecesidad>().ToTable("servicionecesidad");
+        modelBuilder.Entity<CatTipoCobertura>().ToTable("cattipocobertura");
+        modelBuilder.Entity<RecursoZonaCobertura>().ToTable("recursozonacobertura");
+        modelBuilder.Entity<CatBarrera>().ToTable("catbarrera");
+        modelBuilder.Entity<RecursoZonaBarrera>().ToTable("recursozonabarrera");
+        modelBuilder.Entity<RecursoZonaAccesibilidad>().ToTable("recursozonaaccesibilidad");
+        modelBuilder.Entity<CatTipoEvidencia>().ToTable("cattipoevidencia");
+        modelBuilder.Entity<Evidencia>().ToTable("evidencia");
+        modelBuilder.Entity<CatTipoIntervencion>().ToTable("cattipointervencion");
+        modelBuilder.Entity<NecesidadTipoIntervencion>().ToTable("necesidadtipointervencion");
+        modelBuilder.Entity<TipoIntervencionServicio>().ToTable("tipointervencionservicio");
+        modelBuilder.Entity<ModeloPriorizacion>().ToTable("modelopriorizacion");
+        modelBuilder.Entity<ModeloPonderacion>().ToTable("modeloponderacion");
+        modelBuilder.Entity<PrioridadCalculada>().ToTable("prioridadcalculada");
+        modelBuilder.Entity<BrechaAtencion>().ToTable("brechaatencion");
+        modelBuilder.Entity<RegistroOcn>().ToTable("registroocn");
+        modelBuilder.Entity<Auditoria>().ToTable("auditoria");
 
         // ---------- llaves primarias simples ----------
         modelBuilder.Entity<Rol>().HasKey(x => x.IdRol);
@@ -163,16 +229,195 @@ public class OcnDbContext : DbContext
         modelBuilder.Entity<TipoIntervencionServicio>().HasKey(x => new { x.IdTipoIntervencion, x.IdServicio });
         modelBuilder.Entity<ModeloPonderacion>().HasKey(x => new { x.IdModelo, x.Variable });
 
-        // ---------- autorreferencias ----------
+        // ---------- relaciones: seguridad ----------
+        modelBuilder.Entity<UsuarioRol>()
+            .HasOne(x => x.Usuario).WithMany(u => u.UsuarioRoles).HasForeignKey(x => x.IdUsuario);
+        modelBuilder.Entity<UsuarioRol>()
+            .HasOne(x => x.Rol).WithMany(r => r.UsuarioRoles).HasForeignKey(x => x.IdRol);
+
+        // ---------- relaciones: territorio ----------
+        modelBuilder.Entity<Zona>()
+            .HasOne(x => x.Division).WithMany(d => d.Zonas).HasForeignKey(x => x.IdDivision);
+        modelBuilder.Entity<Zona>()
+            .HasOne(x => x.TipoZona).WithMany(t => t.Zonas).HasForeignKey(x => x.IdTipoZona);
+
+        // ---------- relaciones: métodos e instrumentos ----------
         modelBuilder.Entity<Instrumento>()
-            .HasOne(x => x.InstrumentoAnterior)
-            .WithMany(x => x.VersionesPosteriores)
+            .HasOne(x => x.Metodo).WithMany(m => m.Instrumentos).HasForeignKey(x => x.IdMetodo);
+        modelBuilder.Entity<Instrumento>()
+            .HasOne(x => x.InstrumentoAnterior).WithMany(x => x.VersionesPosteriores)
             .HasForeignKey(x => x.IdInstrumentoAnterior);
 
+        // ---------- relaciones: levantamientos ----------
+        modelBuilder.Entity<Levantamiento>()
+            .HasOne(x => x.Zona).WithMany(z => z.Levantamientos).HasForeignKey(x => x.IdZona);
+        modelBuilder.Entity<Levantamiento>()
+            .HasOne(x => x.Periodo).WithMany(p => p.Levantamientos).HasForeignKey(x => x.IdPeriodo);
+        modelBuilder.Entity<Levantamiento>()
+            .HasOne(x => x.Metodo).WithMany(m => m.Levantamientos).HasForeignKey(x => x.IdMetodo);
+        modelBuilder.Entity<LevantamientoInstrumento>()
+            .HasOne(x => x.Levantamiento).WithMany(l => l.LevantamientoInstrumentos).HasForeignKey(x => x.IdLevantamiento);
+        modelBuilder.Entity<LevantamientoInstrumento>()
+            .HasOne(x => x.Instrumento).WithMany(i => i.LevantamientoInstrumentos).HasForeignKey(x => x.IdInstrumento);
+        modelBuilder.Entity<LevantamientoResponsable>()
+            .HasOne(x => x.Levantamiento).WithMany(l => l.LevantamientoResponsables).HasForeignKey(x => x.IdLevantamiento);
+        modelBuilder.Entity<LevantamientoResponsable>()
+            .HasOne(x => x.Usuario).WithMany(u => u.LevantamientoResponsables).HasForeignKey(x => x.IdUsuario);
+        modelBuilder.Entity<LevantamientoFuente>()
+            .HasOne(x => x.Levantamiento).WithMany(l => l.LevantamientoFuentes).HasForeignKey(x => x.IdLevantamiento);
+        modelBuilder.Entity<LevantamientoFuente>()
+            .HasOne(x => x.Fuente).WithMany(f => f.LevantamientoFuentes).HasForeignKey(x => x.IdFuente);
+
+        // ---------- relaciones: fuentes y organizaciones ----------
+        modelBuilder.Entity<Organizacion>()
+            .HasOne(x => x.TipoOrganizacion).WithMany(t => t.Organizaciones).HasForeignKey(x => x.IdTipoOrganizacion);
+        modelBuilder.Entity<Fuente>()
+            .HasOne(x => x.TipoFuente).WithMany(t => t.Fuentes).HasForeignKey(x => x.IdTipoFuente);
+        modelBuilder.Entity<Fuente>()
+            .HasOne(x => x.Organizacion).WithMany(o => o.Fuentes).HasForeignKey(x => x.IdOrganizacion);
+
+        // ---------- relaciones: observaciones y grupos poblacionales ----------
+        modelBuilder.Entity<Observacion>()
+            .HasOne(x => x.Levantamiento).WithMany(l => l.Observaciones).HasForeignKey(x => x.IdLevantamiento);
+        modelBuilder.Entity<ObservacionFuente>()
+            .HasOne(x => x.Observacion).WithMany(o => o.ObservacionFuentes).HasForeignKey(x => x.IdObservacion);
+        modelBuilder.Entity<ObservacionFuente>()
+            .HasOne(x => x.Fuente).WithMany(f => f.ObservacionFuentes).HasForeignKey(x => x.IdFuente);
+        modelBuilder.Entity<ObservacionGrupoPoblacional>()
+            .HasOne(x => x.Observacion).WithMany(o => o.ObservacionGruposPoblacional).HasForeignKey(x => x.IdObservacion);
+        modelBuilder.Entity<ObservacionGrupoPoblacional>()
+            .HasOne(x => x.GrupoPoblacional).WithMany(g => g.ObservacionGruposPoblacional).HasForeignKey(x => x.IdGrupoPoblacional);
+
+        // ---------- relaciones: problemáticas ----------
         modelBuilder.Entity<Problematica>()
-            .HasOne(x => x.ProblematicaPadre)
-            .WithMany(x => x.ProblematicasHijas)
+            .HasOne(x => x.Categoria).WithMany(c => c.Problematicas).HasForeignKey(x => x.IdCategoria);
+        modelBuilder.Entity<Problematica>()
+            .HasOne(x => x.ProblematicaPadre).WithMany(x => x.ProblematicasHijas)
             .HasForeignKey(x => x.IdProblematicaPadre);
+
+        // ---------- relaciones: escalas y hecho central ----------
+        modelBuilder.Entity<ObservacionProblematica>()
+            .HasOne(x => x.Observacion).WithMany(o => o.ObservacionesProblematica).HasForeignKey(x => x.IdObservacion);
+        modelBuilder.Entity<ObservacionProblematica>()
+            .HasOne(x => x.Problematica).WithMany(p => p.ObservacionesProblematica).HasForeignKey(x => x.IdProblematica);
+        modelBuilder.Entity<ObservacionProblematica>()
+            .HasOne(x => x.Magnitud).WithMany(m => m.ObservacionesProblematica).HasForeignKey(x => x.IdMagnitud);
+        modelBuilder.Entity<ObservacionProblematica>()
+            .HasOne(x => x.Gravedad).WithMany(g => g.ObservacionesProblematica).HasForeignKey(x => x.IdGravedad);
+        modelBuilder.Entity<ObservacionProblematica>()
+            .HasOne(x => x.Frecuencia).WithMany(f => f.ObservacionesProblematica).HasForeignKey(x => x.IdFrecuencia);
+        modelBuilder.Entity<TendenciaProblematica>()
+            .HasOne(x => x.Zona).WithMany(z => z.TendenciasProblematica).HasForeignKey(x => x.IdZona);
+        modelBuilder.Entity<TendenciaProblematica>()
+            .HasOne(x => x.Problematica).WithMany(p => p.TendenciasProblematica).HasForeignKey(x => x.IdProblematica);
+        modelBuilder.Entity<TendenciaProblematica>()
+            .HasOne(x => x.Periodo).WithMany(p => p.TendenciasProblematica).HasForeignKey(x => x.IdPeriodo);
+        modelBuilder.Entity<TendenciaProblematica>()
+            .HasOne(x => x.Tendencia).WithMany(t => t.TendenciasProblematica).HasForeignKey(x => x.IdTendencia);
+
+        // ---------- relaciones: necesidades y factores ----------
+        modelBuilder.Entity<ProblematicaNecesidad>()
+            .HasOne(x => x.Problematica).WithMany(p => p.ProblematicaNecesidades).HasForeignKey(x => x.IdProblematica);
+        modelBuilder.Entity<ProblematicaNecesidad>()
+            .HasOne(x => x.Necesidad).WithMany(n => n.ProblematicaNecesidades).HasForeignKey(x => x.IdNecesidad);
+        modelBuilder.Entity<ProblematicaFactorRiesgo>()
+            .HasOne(x => x.Problematica).WithMany(p => p.ProblematicaFactoresRiesgo).HasForeignKey(x => x.IdProblematica);
+        modelBuilder.Entity<ProblematicaFactorRiesgo>()
+            .HasOne(x => x.FactorRiesgo).WithMany(f => f.ProblematicaFactoresRiesgo).HasForeignKey(x => x.IdFactorRiesgo);
+        modelBuilder.Entity<ProblematicaFactorProtector>()
+            .HasOne(x => x.Problematica).WithMany(p => p.ProblematicaFactoresProtector).HasForeignKey(x => x.IdProblematica);
+        modelBuilder.Entity<ProblematicaFactorProtector>()
+            .HasOne(x => x.FactorProtector).WithMany(f => f.ProblematicaFactoresProtector).HasForeignKey(x => x.IdFactorProtector);
+
+        // ---------- relaciones: recursos y servicios ----------
+        modelBuilder.Entity<Recurso>()
+            .HasOne(x => x.TipoRecurso).WithMany(t => t.Recursos).HasForeignKey(x => x.IdTipoRecurso);
+        modelBuilder.Entity<Recurso>()
+            .HasOne(x => x.OrganizacionResponsable).WithMany(o => o.Recursos).HasForeignKey(x => x.IdOrganizacionResponsable);
+        modelBuilder.Entity<Recurso>()
+            .HasOne(x => x.EstadoRecurso).WithMany(e => e.Recursos).HasForeignKey(x => x.IdEstadoRecurso);
+        modelBuilder.Entity<Recurso>()
+            .HasOne(x => x.CostoRecurso).WithMany(c => c.Recursos).HasForeignKey(x => x.IdCostoRecurso);
+        modelBuilder.Entity<FactorProtectorRecurso>()
+            .HasOne(x => x.FactorProtector).WithMany(f => f.FactorProtectorRecursos).HasForeignKey(x => x.IdFactorProtector);
+        modelBuilder.Entity<FactorProtectorRecurso>()
+            .HasOne(x => x.Recurso).WithMany(r => r.FactorProtectorRecursos).HasForeignKey(x => x.IdRecurso);
+        modelBuilder.Entity<RecursoServicio>()
+            .HasOne(x => x.Recurso).WithMany(r => r.RecursoServicios).HasForeignKey(x => x.IdRecurso);
+        modelBuilder.Entity<RecursoServicio>()
+            .HasOne(x => x.Servicio).WithMany(s => s.RecursoServicios).HasForeignKey(x => x.IdServicio);
+        modelBuilder.Entity<ServicioNecesidad>()
+            .HasOne(x => x.Servicio).WithMany(s => s.ServicioNecesidades).HasForeignKey(x => x.IdServicio);
+        modelBuilder.Entity<ServicioNecesidad>()
+            .HasOne(x => x.Necesidad).WithMany(n => n.ServicioNecesidades).HasForeignKey(x => x.IdNecesidad);
+
+        // ---------- relaciones: cobertura, barreras y accesibilidad ----------
+        modelBuilder.Entity<RecursoZonaCobertura>()
+            .HasOne(x => x.Recurso).WithMany(r => r.RecursoZonaCoberturas).HasForeignKey(x => x.IdRecurso);
+        modelBuilder.Entity<RecursoZonaCobertura>()
+            .HasOne(x => x.Zona).WithMany(z => z.RecursoZonaCoberturas).HasForeignKey(x => x.IdZona);
+        modelBuilder.Entity<RecursoZonaCobertura>()
+            .HasOne(x => x.TipoCobertura).WithMany(t => t.RecursoZonaCoberturas).HasForeignKey(x => x.IdTipoCobertura);
+        modelBuilder.Entity<RecursoZonaBarrera>()
+            .HasOne(x => x.Recurso).WithMany(r => r.RecursoZonaBarreras).HasForeignKey(x => x.IdRecurso);
+        modelBuilder.Entity<RecursoZonaBarrera>()
+            .HasOne(x => x.Zona).WithMany(z => z.RecursoZonaBarreras).HasForeignKey(x => x.IdZona);
+        modelBuilder.Entity<RecursoZonaBarrera>()
+            .HasOne(x => x.Barrera).WithMany(b => b.RecursoZonaBarreras).HasForeignKey(x => x.IdBarrera);
+        modelBuilder.Entity<RecursoZonaBarrera>()
+            .HasOne(x => x.GrupoPoblacional).WithMany(g => g.RecursoZonaBarreras).HasForeignKey(x => x.IdGrupoPoblacional);
+        modelBuilder.Entity<RecursoZonaAccesibilidad>()
+            .HasOne(x => x.Recurso).WithMany(r => r.RecursoZonaAccesibilidades).HasForeignKey(x => x.IdRecurso);
+        modelBuilder.Entity<RecursoZonaAccesibilidad>()
+            .HasOne(x => x.Zona).WithMany(z => z.RecursoZonaAccesibilidades).HasForeignKey(x => x.IdZona);
+
+        // ---------- relaciones: evidencias ----------
+        modelBuilder.Entity<Evidencia>()
+            .HasOne(x => x.ObservacionProblematica).WithMany(o => o.Evidencias).HasForeignKey(x => x.IdObservacionProblematica);
+        modelBuilder.Entity<Evidencia>()
+            .HasOne(x => x.TipoEvidencia).WithMany(t => t.Evidencias).HasForeignKey(x => x.IdTipoEvidencia);
+        modelBuilder.Entity<Evidencia>()
+            .HasOne(x => x.Fuente).WithMany(f => f.Evidencias).HasForeignKey(x => x.IdFuente);
+
+        // ---------- relaciones: intervención ----------
+        modelBuilder.Entity<NecesidadTipoIntervencion>()
+            .HasOne(x => x.Necesidad).WithMany(n => n.NecesidadTiposIntervencion).HasForeignKey(x => x.IdNecesidad);
+        modelBuilder.Entity<NecesidadTipoIntervencion>()
+            .HasOne(x => x.TipoIntervencion).WithMany(t => t.NecesidadTiposIntervencion).HasForeignKey(x => x.IdTipoIntervencion);
+        modelBuilder.Entity<TipoIntervencionServicio>()
+            .HasOne(x => x.TipoIntervencion).WithMany(t => t.TipoIntervencionServicios).HasForeignKey(x => x.IdTipoIntervencion);
+        modelBuilder.Entity<TipoIntervencionServicio>()
+            .HasOne(x => x.Servicio).WithMany(s => s.TipoIntervencionServicios).HasForeignKey(x => x.IdServicio);
+
+        // ---------- relaciones: priorización y brecha ----------
+        modelBuilder.Entity<ModeloPonderacion>()
+            .HasOne(x => x.Modelo).WithMany(m => m.ModeloPonderaciones).HasForeignKey(x => x.IdModelo);
+        modelBuilder.Entity<PrioridadCalculada>()
+            .HasOne(x => x.Zona).WithMany(z => z.PrioridadesCalculada).HasForeignKey(x => x.IdZona);
+        modelBuilder.Entity<PrioridadCalculada>()
+            .HasOne(x => x.Problematica).WithMany(p => p.PrioridadesCalculada).HasForeignKey(x => x.IdProblematica);
+        modelBuilder.Entity<PrioridadCalculada>()
+            .HasOne(x => x.Periodo).WithMany(p => p.PrioridadesCalculada).HasForeignKey(x => x.IdPeriodo);
+        modelBuilder.Entity<PrioridadCalculada>()
+            .HasOne(x => x.GrupoPoblacional).WithMany(g => g.PrioridadesCalculada).HasForeignKey(x => x.IdGrupoPoblacional);
+        modelBuilder.Entity<PrioridadCalculada>()
+            .HasOne(x => x.Modelo).WithMany(m => m.PrioridadesCalculada).HasForeignKey(x => x.IdModelo);
+        modelBuilder.Entity<BrechaAtencion>()
+            .HasOne(x => x.Zona).WithMany(z => z.BrechasAtencion).HasForeignKey(x => x.IdZona);
+        modelBuilder.Entity<BrechaAtencion>()
+            .HasOne(x => x.Necesidad).WithMany(n => n.BrechasAtencion).HasForeignKey(x => x.IdNecesidad);
+        modelBuilder.Entity<BrechaAtencion>()
+            .HasOne(x => x.Periodo).WithMany(p => p.BrechasAtencion).HasForeignKey(x => x.IdPeriodo);
+
+        // ---------- relaciones: módulo registros OCN ----------
+        modelBuilder.Entity<RegistroOcn>()
+            .HasOne(x => x.Zona).WithMany(z => z.RegistrosOcn).HasForeignKey(x => x.IdZona);
+        modelBuilder.Entity<RegistroOcn>()
+            .HasOne(x => x.Problematica).WithMany(p => p.RegistrosOcn).HasForeignKey(x => x.IdProblematica);
+
+        // ---------- relaciones: auditoría ----------
+        modelBuilder.Entity<Auditoria>()
+            .HasOne(x => x.Usuario).WithMany(u => u.Auditorias).HasForeignKey(x => x.IdUsuario);
 
         // ---------- precisión decimal ----------
         modelBuilder.Entity<ObservacionProblematica>().Property(x => x.NivelConfianza).HasPrecision(5, 2);
@@ -186,68 +431,8 @@ public class OcnDbContext : DbContext
         modelBuilder.Entity<PrioridadCalculada>().Property(x => x.ValorTendencia).HasPrecision(6, 2);
         modelBuilder.Entity<PrioridadCalculada>().Property(x => x.ValorBrecha).HasPrecision(6, 2);
 
-        // ---------- mapeo entidad -> tabla física (esquema ocn) ----------
-        modelBuilder.Entity<Rol>().ToTable("rol");
-        modelBuilder.Entity<Usuario>().ToTable("usuario");
-        modelBuilder.Entity<UsuarioRol>().ToTable("usuariorol");
-        modelBuilder.Entity<DivisionTerritorial>().ToTable("divisionterritorial");
-        modelBuilder.Entity<CatTipoZona>().ToTable("cattipozona");
-        modelBuilder.Entity<Zona>().ToTable("zona");
-        modelBuilder.Entity<Periodo>().ToTable("periodo");
-        modelBuilder.Entity<CatMetodo>().ToTable("catmetodo");
-        modelBuilder.Entity<Instrumento>().ToTable("instrumento");
-        modelBuilder.Entity<Levantamiento>().ToTable("levantamiento");
-        modelBuilder.Entity<LevantamientoInstrumento>().ToTable("levantamientoinstrumento");
-        modelBuilder.Entity<LevantamientoResponsable>().ToTable("levantamientoresponsable");
-        modelBuilder.Entity<LevantamientoFuente>().ToTable("levantamientofuente");
-        modelBuilder.Entity<CatTipoFuente>().ToTable("cattipofuente");
-        modelBuilder.Entity<CatTipoOrganizacion>().ToTable("cattipoorganizacion");
-        modelBuilder.Entity<Organizacion>().ToTable("organizacion");
-        modelBuilder.Entity<Fuente>().ToTable("fuente");
-        modelBuilder.Entity<Observacion>().ToTable("observacion");
-        modelBuilder.Entity<ObservacionFuente>().ToTable("observacionfuente");
-        modelBuilder.Entity<CatGrupoPoblacional>().ToTable("catgrupopoblacional");
-        modelBuilder.Entity<ObservacionGrupoPoblacional>().ToTable("observaciongrupopoblacional");
-        modelBuilder.Entity<CategoriaProblematica>().ToTable("categoriaproblematica");
-        modelBuilder.Entity<Problematica>().ToTable("problematica");
-        modelBuilder.Entity<CatMagnitud>().ToTable("catmagnitud");
-        modelBuilder.Entity<CatGravedad>().ToTable("catgravedad");
-        modelBuilder.Entity<CatFrecuencia>().ToTable("catfrecuencia");
-        modelBuilder.Entity<CatTendencia>().ToTable("cattendencia");
-        modelBuilder.Entity<ObservacionProblematica>().ToTable("observacionproblematica");
-        modelBuilder.Entity<TendenciaProblematica>().ToTable("tendenciaproblematica");
-        modelBuilder.Entity<Necesidad>().ToTable("necesidad");
-        modelBuilder.Entity<ProblematicaNecesidad>().ToTable("problematicanecesidad");
-        modelBuilder.Entity<CatFactorRiesgo>().ToTable("catfactorriesgo");
-        modelBuilder.Entity<ProblematicaFactorRiesgo>().ToTable("problematicafactorriesgo");
-        modelBuilder.Entity<CatFactorProtector>().ToTable("catfactorprotector");
-        modelBuilder.Entity<ProblematicaFactorProtector>().ToTable("problematicafactorprotector");
-        modelBuilder.Entity<CatTipoRecurso>().ToTable("cattiporecurso");
-        modelBuilder.Entity<CatEstadoRecurso>().ToTable("catestadorecurso");
-        modelBuilder.Entity<CatCostoRecurso>().ToTable("catcostorecurso");
-        modelBuilder.Entity<Recurso>().ToTable("recurso");
-        modelBuilder.Entity<FactorProtectorRecurso>().ToTable("factorprotectorrecurso");
-        modelBuilder.Entity<CatServicio>().ToTable("catservicio");
-        modelBuilder.Entity<RecursoServicio>().ToTable("recursoservicio");
-        modelBuilder.Entity<ServicioNecesidad>().ToTable("servicionecesidad");
-        modelBuilder.Entity<CatTipoCobertura>().ToTable("cattipocobertura");
-        modelBuilder.Entity<RecursoZonaCobertura>().ToTable("recursozonacobertura");
-        modelBuilder.Entity<CatBarrera>().ToTable("catbarrera");
-        modelBuilder.Entity<RecursoZonaBarrera>().ToTable("recursozonabarrera");
-        modelBuilder.Entity<RecursoZonaAccesibilidad>().ToTable("recursozonaaccesibilidad");
-        modelBuilder.Entity<CatTipoEvidencia>().ToTable("cattipoevidencia");
-        modelBuilder.Entity<Evidencia>().ToTable("evidencia");
-        modelBuilder.Entity<CatTipoIntervencion>().ToTable("cattipointervencion");
-        modelBuilder.Entity<NecesidadTipoIntervencion>().ToTable("necesidadtipointervencion");
-        modelBuilder.Entity<TipoIntervencionServicio>().ToTable("tipointervencionservicio");
-        modelBuilder.Entity<ModeloPriorizacion>().ToTable("modelopriorizacion");
-        modelBuilder.Entity<ModeloPonderacion>().ToTable("modeloponderacion");
-        modelBuilder.Entity<PrioridadCalculada>().ToTable("prioridadcalculada");
-        modelBuilder.Entity<BrechaAtencion>().ToTable("brechaatencion");
-        modelBuilder.Entity<Auditoria>().ToTable("auditoria");
-
         // ---------- comportamiento de borrado ----------
-        // La base ya existe con sus own FKs; SQL Server rechaza múltiples rutas
+        // La base ya existe con sus propias FKs; SQL Server rechaza múltiples rutas
         // de borrado en cascada, así que todas las FKs quedan en Restrict (NoAction),
         // igual que lo genera el scaffolding de una base database-first.
         foreach (var foreignKey in modelBuilder.Model.GetEntityTypes().SelectMany(t => t.GetForeignKeys()))

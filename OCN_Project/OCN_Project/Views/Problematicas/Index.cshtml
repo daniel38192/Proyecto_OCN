@@ -1,0 +1,39 @@
+@model IEnumerable<OCN_Project.Models.Entities.Problematica>
+
+@{
+    ViewData["Title"] = "Problemáticas";
+}
+
+<h1>Problemáticas</h1>
+<p class="text-muted">Catálogo jerárquico de problemáticas detectadas en la comunidad.</p>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Nueva problemática</a>
+</p>
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Nombre)</th>
+            <th>Categoría</th>
+            <th>Problemática padre</th>
+            <th>@Html.DisplayNameFor(model => model.Activo)</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model)
+{
+        <tr>
+            <td>@item.Nombre</td>
+            <td>@item.Categoria?.Nombre</td>
+            <td>@item.ProblematicaPadre?.Nombre</td>
+            <td>@(item.Activo ? "Sí" : "No")</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.IdProblematica" class="btn btn-sm btn-warning">Editar</a>
+                <a asp-action="Details" asp-route-id="@item.IdProblematica" class="btn btn-sm btn-info">Detalles</a>
+                <a asp-action="Delete" asp-route-id="@item.IdProblematica" class="btn btn-sm btn-danger">Eliminar</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

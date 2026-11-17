@@ -1,0 +1,41 @@
+@model IEnumerable<OCN_Project.Models.Entities.Periodo>
+
+@{
+    ViewData["Title"] = "Periodos";
+}
+
+<h1>Periodos de estudio</h1>
+<p class="text-muted">Catálogo de periodos en los que se realizan los levantamientos.</p>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Nuevo periodo</a>
+</p>
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.CodigoPeriodo)</th>
+            <th>@Html.DisplayNameFor(model => model.Nombre)</th>
+            <th>@Html.DisplayNameFor(model => model.FechaInicio)</th>
+            <th>@Html.DisplayNameFor(model => model.FechaFin)</th>
+            <th>@Html.DisplayNameFor(model => model.Activo)</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model)
+{
+        <tr>
+            <td>@item.CodigoPeriodo</td>
+            <td>@item.Nombre</td>
+            <td>@item.FechaInicio.ToString("dd/MM/yyyy")</td>
+            <td>@(item.FechaFin?.ToString("dd/MM/yyyy") ?? "En curso")</td>
+            <td>@(item.Activo ? "Sí" : "No")</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.IdPeriodo" class="btn btn-sm btn-warning">Editar</a>
+                <a asp-action="Details" asp-route-id="@item.IdPeriodo" class="btn btn-sm btn-info">Detalles</a>
+                <a asp-action="Delete" asp-route-id="@item.IdPeriodo" class="btn btn-sm btn-danger">Eliminar</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

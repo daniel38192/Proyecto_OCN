@@ -1,0 +1,32 @@
+@model OCN_Project.Models.Entities.Periodo
+
+@{
+    ViewData["Title"] = "Detalle de periodo";
+}
+
+<h1>Detalle de periodo</h1>
+
+<div>
+    <h4>Periodo</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.CodigoPeriodo)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.CodigoPeriodo)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Nombre)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Nombre)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.FechaInicio)</dt>
+        <dd class="col-sm-9">@Model.FechaInicio.ToString("dd/MM/yyyy")</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.FechaFin)</dt>
+        <dd class="col-sm-9">@(Model.FechaFin?.ToString("dd/MM/yyyy") ?? "En curso")</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Activo)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Activo)</dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.IdPeriodo" class="btn btn-warning">Editar</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
+</div>

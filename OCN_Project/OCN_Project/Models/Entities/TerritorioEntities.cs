@@ -43,4 +43,5 @@ public class Zona
     public ICollection<RecursoZonaAccesibilidad> RecursoZonaAccesibilidades { get; set; } = new List<RecursoZonaAccesibilidad>();
     public ICollection<PrioridadCalculada> PrioridadesCalculada { get; set; } = new List<PrioridadCalculada>();
     public ICollection<BrechaAtencion> BrechasAtencion { get; set; } = new List<BrechaAtencion>();
+    public ICollection<RegistroOcn> RegistrosOcn { get; set; } = new List<RegistroOcn>();
 }

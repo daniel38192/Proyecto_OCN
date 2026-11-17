@@ -1,0 +1,48 @@
+@model OCN_Project.Models.Entities.Periodo
+
+@{
+    ViewData["Title"] = "Nuevo periodo";
+}
+
+<h1>Nuevo periodo de estudio</h1>
+<h4>Periodo</h4>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="CodigoPeriodo" class="form-label"></label>
+                <input asp-for="CodigoPeriodo" class="form-control" placeholder="p. ej. P-2026-01" />
+                <span asp-validation-for="CodigoPeriodo" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Nombre" class="form-label"></label>
+                <input asp-for="Nombre" class="form-control" />
+                <span asp-validation-for="Nombre" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="FechaInicio" class="form-label"></label>
+                <input asp-for="FechaInicio" type="date" class="form-control" />
+                <span asp-validation-for="FechaInicio" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="FechaFin" class="form-label"></label>
+                <input asp-for="FechaFin" type="date" class="form-control" />
+                <span asp-validation-for="FechaFin" class="text-danger"></span>
+            </div>
+            <div class="mb-3 form-check">
+                <input asp-for="Activo" class="form-check-input" checked />
+                <label asp-for="Activo" class="form-check-label"></label>
+            </div>
+            <div class="mb-3">
+                <input type="submit" value="Crear" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

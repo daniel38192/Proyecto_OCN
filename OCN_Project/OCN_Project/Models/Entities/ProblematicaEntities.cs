@@ -30,4 +30,5 @@ public class Problematica
     public ICollection<ProblematicaFactorRiesgo> ProblematicaFactoresRiesgo { get; set; } = new List<ProblematicaFactorRiesgo>();
     public ICollection<ProblematicaFactorProtector> ProblematicaFactoresProtector { get; set; } = new List<ProblematicaFactorProtector>();
     public ICollection<PrioridadCalculada> PrioridadesCalculada { get; set; } = new List<PrioridadCalculada>();
+    public ICollection<RegistroOcn> RegistrosOcn { get; set; } = new List<RegistroOcn>();
 }

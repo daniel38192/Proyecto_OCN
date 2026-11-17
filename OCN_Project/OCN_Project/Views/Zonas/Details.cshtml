@@ -1,0 +1,38 @@
+@model OCN_Project.Models.Entities.Zona
+
+@{
+    ViewData["Title"] = "Detalle de zona";
+}
+
+<h1>Detalle de zona</h1>
+
+<div>
+    <h4>Zona</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.CodigoZona)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.CodigoZona)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Nombre)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Nombre)</dd>
+
+        <dt class="col-sm-3">División</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Division.Nombre)</dd>
+
+        <dt class="col-sm-3">Tipo de zona</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.TipoZona.Nombre)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.DescripcionGeneral)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.DescripcionGeneral)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.ReferenciaGeograficaAprox)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.ReferenciaGeograficaAprox)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Activo)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Activo)</dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.IdZona" class="btn btn-warning">Editar</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
+</div>

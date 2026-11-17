@@ -1,0 +1,23 @@
+@model OCN_Project.Models.Entities.CategoriaProblematica
+
+@{
+    ViewData["Title"] = "Detalle de categoría";
+}
+
+<h1>Detalle de categoría</h1>
+
+<div>
+    <h4>CategoriaProblematica</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Nombre)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Nombre)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Activo)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Activo)</dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.IdCategoria" class="btn btn-warning">Editar</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
+</div>

@@ -1,0 +1,34 @@
+@model OCN_Project.Models.Entities.Zona
+
+@{
+    ViewData["Title"] = "Eliminar zona";
+}
+
+<h1>Eliminar zona</h1>
+<h3>¿Seguro que deseas eliminar esta zona?</h3>
+<div>
+    <h4>Zona</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.CodigoZona)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.CodigoZona)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Nombre)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Nombre)</dd>
+
+        <dt class="col-sm-3">División</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Division.Nombre)</dd>
+
+        <dt class="col-sm-3">Tipo de zona</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.TipoZona.Nombre)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Activo)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Activo)</dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="IdZona" />
+        <input type="submit" value="Eliminar" class="btn btn-danger" />
+        <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
+    </form>
+</div>

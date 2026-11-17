@@ -1,0 +1,38 @@
+@model OCN_Project.Models.Entities.RegistroOcn
+
+@{
+    ViewData["Title"] = "Detalle de registro OCN";
+}
+
+<h1>Detalle de registro</h1>
+
+<div>
+    <h4>RegistroOcn</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.IdRegistroOcn)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.IdRegistroOcn)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Zona)</dt>
+        <dd class="col-sm-9">@(Model.Zona != null ? $"{Model.Zona.CodigoZona} - {Model.Zona.Nombre}" : "")</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Problematica)</dt>
+        <dd class="col-sm-9">@(Model.Problematica?.Nombre ?? "")</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Intensidad)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Intensidad)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Frecuencia)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Frecuencia)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.NotaContexto)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.NotaContexto)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.FechaRegistro)</dt>
+        <dd class="col-sm-9">@Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.IdRegistroOcn" class="btn btn-warning">Editar</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
+</div>

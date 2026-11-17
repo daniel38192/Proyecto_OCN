@@ -1,0 +1,37 @@
+@model OCN_Project.Models.Entities.RegistroOcn
+
+@{
+    ViewData["Title"] = "Eliminar registro OCN";
+}
+
+<h1>Eliminar registro OCN</h1>
+<h3>¿Seguro que deseas eliminar este registro?</h3>
+<div>
+    <h4>RegistroOcn</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Zona)</dt>
+        <dd class="col-sm-9">@(Model.Zona != null ? $"{Model.Zona.CodigoZona} - {Model.Zona.Nombre}" : "")</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Problematica)</dt>
+        <dd class="col-sm-9">@(Model.Problematica?.Nombre ?? "")</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Intensidad)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Intensidad)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Frecuencia)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Frecuencia)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.NotaContexto)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.NotaContexto)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.FechaRegistro)</dt>
+        <dd class="col-sm-9">@Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="IdRegistroOcn" />
+        <input type="submit" value="Eliminar" class="btn btn-danger" />
+        <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
+    </form>
+</div>

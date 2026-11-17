@@ -1,0 +1,31 @@
+@model OCN_Project.Models.Entities.Problematica
+
+@{
+    ViewData["Title"] = "Eliminar problemática";
+}
+
+<h1>Eliminar problemática</h1>
+<h3>¿Seguro que deseas eliminar esta problemática?</h3>
+<div>
+    <h4>Problematica</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Nombre)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Nombre)</dd>
+
+        <dt class="col-sm-3">Categoría</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Categoria.Nombre)</dd>
+
+        <dt class="col-sm-3">Problemática padre</dt>
+        <dd class="col-sm-9">@(Model.ProblematicaPadre?.Nombre ?? "")</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Activo)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Activo)</dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="IdProblematica" />
+        <input type="submit" value="Eliminar" class="btn btn-danger" />
+        <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
+    </form>
+</div>

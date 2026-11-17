@@ -1,0 +1,53 @@
+@model OCN_Project.Models.Entities.RegistroOcn
+
+@{
+    ViewData["Title"] = "Nuevo registro OCN";
+}
+
+<h1>Nuevo registro OCN</h1>
+<h4>RegistroOcn</h4>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="IdZona" class="form-label"></label>
+                <select asp-for="IdZona" class="form-select" asp-items="ViewBag.IdZona">
+                    <option value="">-- Selecciona una zona --</option>
+                </select>
+                <span asp-validation-for="IdZona" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="IdProblematica" class="form-label"></label>
+                <select asp-for="IdProblematica" class="form-select" asp-items="ViewBag.IdProblematica">
+                    <option value="">-- Selecciona una problemática --</option>
+                </select>
+                <span asp-validation-for="IdProblematica" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Intensidad" class="form-label"></label>
+                <input asp-for="Intensidad" type="number" min="1" max="10" class="form-control" />
+                <span asp-validation-for="Intensidad" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Frecuencia" class="form-label"></label>
+                <input asp-for="Frecuencia" type="number" min="1" max="10" class="form-control" />
+                <span asp-validation-for="Frecuencia" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="NotaContexto" class="form-label"></label>
+                <textarea asp-for="NotaContexto" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="NotaContexto" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <input type="submit" value="Crear" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

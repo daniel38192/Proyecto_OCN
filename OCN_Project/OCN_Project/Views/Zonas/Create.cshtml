@@ -1,0 +1,62 @@
+@model OCN_Project.Models.Entities.Zona
+
+@{
+    ViewData["Title"] = "Nueva zona";
+}
+
+<h1>Nueva zona</h1>
+<h4>Zona</h4>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="CodigoZona" class="form-label"></label>
+                <input asp-for="CodigoZona" class="form-control" placeholder="p. ej. Z-007" />
+                <span asp-validation-for="CodigoZona" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Nombre" class="form-label"></label>
+                <input asp-for="Nombre" class="form-control" />
+                <span asp-validation-for="Nombre" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">División territorial</label>
+                <select asp-for="IdDivision" class="form-select" asp-items="ViewBag.IdDivision">
+                    <option value="">-- Selecciona una división --</option>
+                </select>
+                <span asp-validation-for="IdDivision" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Tipo de zona</label>
+                <select asp-for="IdTipoZona" class="form-select" asp-items="ViewBag.IdTipoZona">
+                    <option value="">-- Selecciona un tipo --</option>
+                </select>
+                <span asp-validation-for="IdTipoZona" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="DescripcionGeneral" class="form-label"></label>
+                <textarea asp-for="DescripcionGeneral" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="DescripcionGeneral" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="ReferenciaGeograficaAprox" class="form-label"></label>
+                <input asp-for="ReferenciaGeograficaAprox" class="form-control" />
+                <span asp-validation-for="ReferenciaGeograficaAprox" class="text-danger"></span>
+            </div>
+            <div class="mb-3 form-check">
+                <input asp-for="Activo" class="form-check-input" />
+                <label asp-for="Activo" class="form-check-label"></label>
+            </div>
+            <div class="mb-3">
+                <input type="submit" value="Crear" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

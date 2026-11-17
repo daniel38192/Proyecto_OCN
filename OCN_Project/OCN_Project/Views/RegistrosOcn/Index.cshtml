@@ -1,0 +1,43 @@
+@model IEnumerable<OCN_Project.Models.Entities.RegistroOcn>
+
+@{
+    ViewData["Title"] = "Registros OCN";
+}
+
+<h1>Registros OCN</h1>
+<p class="text-muted">Módulo principal: registros de detección con FKs hacia Zona y Problemática.</p>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Nuevo registro</a>
+</p>
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.IdRegistroOcn)</th>
+            <th>@Html.DisplayNameFor(model => model.Zona)</th>
+            <th>@Html.DisplayNameFor(model => model.Problematica)</th>
+            <th>@Html.DisplayNameFor(model => model.Intensidad)</th>
+            <th>@Html.DisplayNameFor(model => model.Frecuencia)</th>
+            <th>@Html.DisplayNameFor(model => model.FechaRegistro)</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model)
+{
+        <tr>
+            <td>@item.IdRegistroOcn</td>
+            <td>@item.Zona?.CodigoZona - @item.Zona?.Nombre</td>
+            <td>@item.Problematica?.Nombre</td>
+            <td>@item.Intensidad</td>
+            <td>@item.Frecuencia</td>
+            <td>@item.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.IdRegistroOcn" class="btn btn-sm btn-warning">Editar</a>
+                <a asp-action="Details" asp-route-id="@item.IdRegistroOcn" class="btn btn-sm btn-info">Detalles</a>
+                <a asp-action="Delete" asp-route-id="@item.IdRegistroOcn" class="btn btn-sm btn-danger">Eliminar</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
