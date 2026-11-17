@@ -1,7 +1,14 @@
+using Microsoft.EntityFrameworkCore;
+using OCN_Project.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Entity Framework Core -> base proyecto_ocn en localhost (autenticación de Windows).
+builder.Services.AddDbContext<OcnDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("OcnConnection")));
 
 var app = builder.Build();
 
