@@ -25,6 +25,24 @@ public static class TSqlDemoExecutor
             (SELECT TOP (1) idusuario FROM ocn.usuario ORDER BY idusuario) AS idusuario1,
             (SELECT TOP (1) idusuario FROM ocn.usuario ORDER BY idusuario DESC) AS idusuario2;";
 
+    // ------------------------------------------------------------------
+    // T-SQL: el tipo de tabla que usa el parámetro TVP. El guion de la
+    // entrega 2 lo define; si la base no lo tiene (guion ejecutado
+    // parcialmente), la demostración lo crea en lugar de fallar con el
+    // error 351. El DDL es idempotente (IF NOT EXISTS) y el tipo se
+    // conserva porque es parte del esquema del proyecto.
+    // ------------------------------------------------------------------
+    private const string SqlVerificarTipo = @"
+        SELECT COUNT(*) FROM sys.table_types
+        WHERE schema_id = SCHEMA_ID('ocn') AND name = 'ListaUsuariosType';";
+
+    private const string SqlAsegurarTipo = @"
+        IF NOT EXISTS (SELECT 1 FROM sys.table_types
+                       WHERE schema_id = SCHEMA_ID('ocn') AND name = 'ListaUsuariosType')
+        BEGIN
+            CREATE TYPE ocn.ListaUsuariosType AS TABLE (idusuario int NOT NULL);
+        END;";
+
     private const string SqlMaxIdError = "SELECT ISNULL(MAX(iderror), 0) FROM ocn.errorprocedimiento;";
 
     private const string SqlBorrarDemoIntervenciones = @"
@@ -36,6 +54,37 @@ public static class TSqlDemoExecutor
     private const string SqlBorrarAuditoriaDemo = @"
         DELETE FROM ocn.auditoria
         WHERE nombretabla = 'intervencion' AND idregistro IN (SELECT idintervencion FROM ocn.intervencion WHERE descripcion LIKE @patron);";
+
+    // ------------------------------------------------------------------
+    // Idempotencia: limpieza preventiva de filas demo residuales (una corrida
+    // interrumpida puede dejar filas atrás). En un solo lote: se regresan las
+    // demo 'Completada' a 'Planeada' (el trigger de eliminación impide borrarlas
+    // directamente), se borra la auditoría que referencia filas demo (mientras
+    // existan, para atrapar también la auditoría que genera el propio UPDATE
+    // de reversión) y se borran las filas demo (la cascada elimina responsables).
+    // ------------------------------------------------------------------
+    private const string SqlLimpiezaPrevias = @"
+        UPDATE ocn.intervencion SET estado = 'Planeada'
+        WHERE descripcion LIKE @patron AND estado = 'Completada';
+        DELETE FROM ocn.auditoria
+        WHERE nombretabla = 'intervencion' AND idregistro IN (SELECT idintervencion FROM ocn.intervencion WHERE descripcion LIKE @patron);
+        DELETE FROM ocn.intervencion WHERE descripcion LIKE @patron;";
+
+    private const string SqlMaxIdAuditoria = "SELECT ISNULL(MAX(idauditoria), 0) FROM ocn.auditoria;";
+
+    private const string SqlBorrarAuditoriaDesde = @"
+        DELETE FROM ocn.auditoria WHERE idauditoria > @maxidauditoria;";
+
+    // Filas REALES que el procedimiento del cursor va a actualizar además de las demo
+    // (misma condición del WHERE del cursor, excluyendo filas demo). Se restauran al
+    // final para que la base quede exactamente como estaba.
+    private const string SqlSnapshotRealesCursor = @"
+        SELECT idintervencion
+        FROM ocn.intervencion
+        WHERE estado = 'Planeada'
+          AND fecharegistro < DATEADD(DAY, -@dias, SYSDATETIME())
+          AND descripcion NOT LIKE @patron
+        ORDER BY idintervencion;";
 
     // ------------------------------------------------------------------
     // Demo 1: procedimiento transaccional ocn.usp_registrar_intervencion
@@ -96,6 +145,11 @@ public static class TSqlDemoExecutor
                 {
                     return resultado;
                 }
+
+                // Idempotencia: el tipo del TVP debe existir (el guion lo crea, pero si la
+                // base no lo tiene se crea aquí) y las filas demo residuales se eliminan.
+                AsegurarTipoListaUsuarios(conexion, resultado.Pasos);
+                LimpiarFilasDemoPrevias(conexion, resultado.Pasos);
 
                 // ---------------- PASO A: llamada exitosa ----------------
                 int idNueva;
@@ -263,6 +317,9 @@ public static class TSqlDemoExecutor
                     return resultado;
                 }
 
+                // Idempotencia: elimina filas demo residuales de corridas anteriores.
+                LimpiarFilasDemoPrevias(conexion, resultado.Pasos);
+
                 // ---------------- Preparación: fila demo 'Planeada' ----------------
                 var marcador = PrefijoDemo + Guid.NewGuid() + " auditoria";
                 int idFila = InsertarIntervencionDemo(conexion, fks, marcador, "Planeada", null);
@@ -374,6 +431,10 @@ public static class TSqlDemoExecutor
                 {
                     return resultado;
                 }
+
+                // Idempotencia: elimina filas demo residuales de corridas anteriores
+                // (incluye reverter demo 'Completada' que el trigger impide borrar).
+                LimpiarFilasDemoPrevias(conexion, resultado.Pasos);
 
                 // ---------------- Escenario 1: eliminar una 'Completada' (bloqueado) ----------------
                 var marcadorProtegida = PrefijoDemo + Guid.NewGuid() + " protegida";
@@ -495,6 +556,8 @@ public static class TSqlDemoExecutor
         };
 
         var fks = new Dictionary<string, object?>();
+        List<int> idsRealesAfectadas = new List<int>();
+        int maxIdAuditoriaInicio = 0;
 
         using (var conexion = new SqlConnection(cadenaConexion))
         {
@@ -506,6 +569,12 @@ public static class TSqlDemoExecutor
                 {
                     return resultado;
                 }
+
+                // Idempotencia: elimina filas demo residuales de corridas anteriores y
+                // fija la línea base de auditoría (todo lo que genere ESTA corrida se
+                // borra al final, incluido lo que el cursor escriba sobre filas reales).
+                LimpiarFilasDemoPrevias(conexion, resultado.Pasos);
+                maxIdAuditoriaInicio = Convert.ToInt32(Escalar(conexion, SqlMaxIdAuditoria));
 
                 // ---------------- Guard: @dias negativo lanza 50003 ----------------
                 string mensajeGuarda;
@@ -539,6 +608,21 @@ public static class TSqlDemoExecutor
                     Titulo = "Evidencia B: ANTES del cursor (todas en estado 'Planeada')",
                     Tabla = LeerTabla(conexion, SqlIntervencionesDemo, ("@patron", marcador + "%")),
                 });
+
+                // Idempotencia: el procedimiento actualiza TODAS las 'Planeada' antiguas,
+                // no solo las demo. Se registra cuáles filas REALES serán afectadas para
+                // restaurarlas al terminar y dejar la base exactamente como estaba.
+                using (var comando = new SqlCommand(SqlSnapshotRealesCursor, conexion))
+                {
+                    comando.Parameters.AddWithValue("@dias", 30);
+                    comando.Parameters.AddWithValue("@patron", PrefijoDemo + "%");
+                    using var lector = comando.ExecuteReader();
+                    while (lector.Read()) idsRealesAfectadas.Add(lector.GetInt32(0));
+                }
+                if (idsRealesAfectadas.Count > 0)
+                {
+                    resultado.Pasos.Add($"Nota: el procedimiento también actualizará {idsRealesAfectadas.Count} intervenciones reales 'Planeada' antiguas; se restaurarán al terminar para dejar la base como estaba.");
+                }
 
                 // ---------------- Ejecución del cursor ----------------
                 EjecutarNoQuery(conexion, SqlLlamarCursor, ("@dias", 30));
@@ -574,10 +658,34 @@ public static class TSqlDemoExecutor
             {
                 try
                 {
-                    // Se regresa a 'Planeada' (aunque 'EnProceso' también se puede borrar) y
-                    // se eliminan las intervenciones demo junto con su auditoría.
+                    // 1. Restaurar el estado 'Planeada' de las intervenciones REALES que el
+                    //    procedimiento también actualizó (idempotencia: la base queda como estaba).
+                    if (idsRealesAfectadas.Count > 0)
+                    {
+                        var nombres = new string[idsRealesAfectadas.Count];
+                        var parametros = new (string Nombre, object? Valor)[idsRealesAfectadas.Count];
+                        for (var i = 0; i < idsRealesAfectadas.Count; i++)
+                        {
+                            nombres[i] = "@id" + i;
+                            parametros[i] = (nombres[i], idsRealesAfectadas[i]);
+                        }
+                        var sqlRestaurar = "UPDATE ocn.intervencion SET estado = 'Planeada' " +
+                                           "WHERE idintervencion IN (" + string.Join(", ", nombres) + ") AND estado = 'EnProceso';";
+                        EjecutarNoQuery(conexion, sqlRestaurar, parametros);
+                        resultado.Pasos.Add($"Limpieza: se restauró el estado 'Planeada' de {idsRealesAfectadas.Count} intervenciones reales que el cursor también actualizó.");
+                    }
+
+                    // 2. Se regresa a 'Planeada' (aunque 'EnProceso' también se puede borrar) y
+                    //    se eliminan las intervenciones demo junto con su auditoría.
                     EjecutarNoQuery(conexion, SqlRevertirCursorDemo, ("@patron", PrefijoDemo + "%"));
+
+                    // 3. Borrar TODA la auditoría generada por esta corrida (desde la línea base:
+                    //    incluye el cursor sobre filas reales y demo, y las restauraciones),
+                    //    más cualquier auditoría residual que referencie filas demo.
+                    EjecutarNoQuery(conexion, SqlBorrarAuditoriaDesde, ("@maxidauditoria", maxIdAuditoriaInicio));
                     EjecutarNoQuery(conexion, SqlBorrarAuditoriaDemo, ("@patron", PrefijoDemo + "%"));
+
+                    // 4. Borrar las filas demo.
                     EjecutarNoQuery(conexion, SqlBorrarDemoIntervenciones, ("@patron", PrefijoDemo + "%"));
                 }
                 catch (Exception exLimpieza)
@@ -732,6 +840,38 @@ public static class TSqlDemoExecutor
         }
 
         resultado.Exito = true;
+    }
+
+    /// <summary>
+    /// Garantiza (de forma idempotente) que el tipo de tabla ocn.ListaUsuariosType exista
+    /// antes de usar el TVP. El guion de la entrega 2 lo define; si la base no lo tiene
+    /// (guion ejecutado parcialmente) la demostración lo crea en lugar de fallar con el
+    /// error 351. El DDL re-verifica con IF NOT EXISTS y el tipo se conserva porque es
+    /// parte del esquema del proyecto.
+    /// </summary>
+    private static void AsegurarTipoListaUsuarios(SqlConnection conexion, List<string> pasos)
+    {
+        var existe = Convert.ToInt32(Escalar(conexion, SqlVerificarTipo)) > 0;
+        EjecutarNoQuery(conexion, SqlAsegurarTipo);
+        if (!existe)
+        {
+            pasos.Add("Nota previa: el tipo ocn.ListaUsuariosType no existía en la base y fue creado (el guion de la entrega 2 lo define); se conserva porque es parte del esquema del proyecto.");
+        }
+    }
+
+    /// <summary>
+    /// Limpieza preventiva (idempotencia): elimina filas demo residuales de ejecuciones
+    /// anteriores (p. ej. si una corrida previa se interrumpió antes de llegar a la
+    /// limpieza del finally). Así cada corrida inicia desde un estado conocido y las
+    /// evidencias (conteos y deltas) nunca quedan contaminadas.
+    /// </summary>
+    private static void LimpiarFilasDemoPrevias(SqlConnection conexion, List<string> pasos)
+    {
+        var afectadas = EjecutarNoQuery(conexion, SqlLimpiezaPrevias, ("@patron", PrefijoDemo + "%"));
+        if (afectadas > 0)
+        {
+            pasos.Add($"Limpieza preventiva: se eliminaron {afectadas} filas/registros demo residuales de ejecuciones anteriores para que cada corrida sea repetible.");
+        }
     }
 
     /// <summary>Construye el DataTable del parámetro de tabla (TVP) ocn.ListaUsuariosType con usuarios reales.</summary>
