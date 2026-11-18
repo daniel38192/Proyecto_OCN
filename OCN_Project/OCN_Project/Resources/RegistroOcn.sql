@@ -1,7 +1,7 @@
 /* ============================================================================
    Tabla del módulo RegistrosOCN (módulo principal de la WebApp MVC).
-   FKs hacia zona y problematica; intensidad y frecuencia en rango 1-10
-   (la validación de rango se refuerza en la aplicación con Data Annotations).
+   FKs hacia zona y problematica; intensidad y frecuencia en rango 1-5
+   (validación reforzada en la aplicación con Data Annotations [Range(1,5)]).
    ============================================================================ */
 
 use proyecto_ocn

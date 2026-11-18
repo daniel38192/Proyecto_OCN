@@ -1,8 +1,125 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Inicio";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Pelones</h1>
-    <p>Learn about <a href="https://i.scdn.co/image/ab67656300005f1f530aeeb44123a17532df287a">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="hero-ocn">
+    <div class="container position-relative">
+        <span class="hero-badge">Actividad 8 · WebApp MVC</span>
+        <h1 class="hero-title">Observatorio Comunitario de Necesidades</h1>
+        <p class="hero-subtitle">
+            Plataforma para registrar, organizar y consultar detecciones de problemáticas por zona.
+            Administra el módulo principal <strong>Registros OCN</strong> y sus catálogos relacionados.
+        </p>
+        <div class="hero-actions">
+            <a asp-controller="RegistrosOcn" asp-action="Index" class="btn btn-light btn-lg hero-btn-primary">
+                Ir a Registros OCN
+            </a>
+            <a asp-controller="RegistrosOcn" asp-action="Create" class="btn btn-outline-light btn-lg">
+                + Nuevo registro
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="container home-section">
+    <div class="section-header">
+        <h2>Módulos del sistema</h2>
+        <p>Accesos rápidos a la administración de registros y catálogos base.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+            <a asp-controller="RegistrosOcn" asp-action="Index" class="module-card module-card-featured">
+                <div class="module-icon">📋</div>
+                <div class="module-body">
+                    <h3>Registros OCN</h3>
+                    <p>Módulo principal: registra detecciones vinculando <strong>Zona</strong> y <strong>Problemática</strong> con intensidad y frecuencia (1–5).</p>
+                    <span class="module-cta">Abrir módulo →</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <a asp-controller="Zonas" asp-action="Index" class="module-card">
+                <div class="module-icon">🗺️</div>
+                <div class="module-body">
+                    <h3>Zonas</h3>
+                    <p>Catálogo de zonas de estudio con división territorial y tipo de zona.</p>
+                    <span class="module-cta">Administrar →</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <a asp-controller="Problematicas" asp-action="Index" class="module-card">
+                <div class="module-icon">⚠️</div>
+                <div class="module-body">
+                    <h3>Problemáticas</h3>
+                    <p>Problemáticas y subproblemáticas organizadas por categoría.</p>
+                    <span class="module-cta">Administrar →</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <a asp-controller="CategoriasProblematica" asp-action="Index" class="module-card">
+                <div class="module-icon">🏷️</div>
+                <div class="module-body">
+                    <h3>Categorías</h3>
+                    <p>Categorías que clasifican las problemáticas detectadas en el territorio.</p>
+                    <span class="module-cta">Administrar →</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <a asp-controller="Periodos" asp-action="Index" class="module-card">
+                <div class="module-icon">📅</div>
+                <div class="module-body">
+                    <h3>Periodos</h3>
+                    <p>Periodos de observación para contextualizar los registros en el tiempo.</p>
+                    <span class="module-cta">Administrar →</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="module-card module-card-info">
+                <div class="module-icon">⚙️</div>
+                <div class="module-body">
+                    <h3>Tecnologías</h3>
+                    <ul class="tech-list">
+                        <li>ASP.NET Core MVC (.NET 10)</li>
+                        <li>Entity Framework Core + SQL Server</li>
+                        <li>Razor Views · Data Annotations</li>
+                        <li>CRUD con AntiForgeryToken</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container home-section">
+    <div class="highlights-strip">
+        <div class="highlight-item">
+            <span class="highlight-value">5</span>
+            <span class="highlight-label">Módulos CRUD</span>
+        </div>
+        <div class="highlight-sep"></div>
+        <div class="highlight-item">
+            <span class="highlight-value">FK</span>
+            <span class="highlight-label">Zona + Problemática</span>
+        </div>
+        <div class="highlight-sep"></div>
+        <div class="highlight-item">
+            <span class="highlight-value">1–5</span>
+            <span class="highlight-label">Rango Intensidad/Frecuencia</span>
+        </div>
+        <div class="highlight-sep"></div>
+        <div class="highlight-item">
+            <span class="highlight-value">EF Core</span>
+            <span class="highlight-label">Migraciones aplicadas</span>
+        </div>
+    </div>
+</section>

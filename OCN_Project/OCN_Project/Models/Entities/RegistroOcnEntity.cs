@@ -6,7 +6,7 @@ namespace OCN_Project.Models.Entities;
 /// <summary>
 /// Registro de detección OCN (módulo principal de la WebApp).
 /// FKs hacia Zona y Problematica; campos numéricos Intensidad y Frecuencia
-/// validados en rango 1-10 con Data Annotations.
+/// validados en rango 1-5 con Data Annotations.
 /// </summary>
 [Table("registroocn", Schema = "ocn")]
 public class RegistroOcn
@@ -23,13 +23,13 @@ public class RegistroOcn
     public int IdProblematica { get; set; }
 
     [Required(ErrorMessage = "La intensidad es obligatoria.")]
-    [Range(1, 10, ErrorMessage = "La intensidad debe estar entre 1 y 10.")]
-    [Display(Name = "Intensidad (1-10)")]
+    [Range(1, 5, ErrorMessage = "La intensidad debe estar entre 1 y 5.")]
+    [Display(Name = "Intensidad (1-5)")]
     public int Intensidad { get; set; }
 
     [Required(ErrorMessage = "La frecuencia es obligatoria.")]
-    [Range(1, 10, ErrorMessage = "La frecuencia debe estar entre 1 y 10.")]
-    [Display(Name = "Frecuencia (1-10)")]
+    [Range(1, 5, ErrorMessage = "La frecuencia debe estar entre 1 y 5.")]
+    [Display(Name = "Frecuencia (1-5)")]
     public int Frecuencia { get; set; }
 
     [StringLength(500, ErrorMessage = "La nota no puede exceder 500 caracteres.")]

@@ -8,7 +8,7 @@ namespace OCN_Project.Controllers;
 
 /// <summary>
 /// CRUD del módulo principal RegistrosOCN: FKs a Zona y Problematica,
-/// validación de rango 1-10 en Intensidad/Frecuencia y AntiForgeryToken.
+/// validación de rango 1-5 en Intensidad/Frecuencia y AntiForgeryToken.
 /// </summary>
 public class RegistrosOcnController : Controller
 {
