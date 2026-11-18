@@ -27,12 +27,16 @@
             </div>
             <div class="mb-3">
                 <label asp-for="Intensidad" class="form-label"></label>
-                <input asp-for="Intensidad" type="number" min="1" max="5" class="form-control" />
+                <input asp-for="Intensidad" type="number" min="1" max="5" class="form-control"
+                       oninvalid="if(this.value===''){this.setCustomValidity('La intensidad es obligatoria.')}else if(this.validity.rangeOverflow){this.setCustomValidity('El valor debe ser menor o igual a 5.')}else if(this.validity.rangeUnderflow){this.setCustomValidity('El valor debe ser mayor o igual a 1.')}else{this.setCustomValidity('Ingresa un número válido.')}"
+                       oninput="this.setCustomValidity('')" />
                 <span asp-validation-for="Intensidad" class="text-danger"></span>
             </div>
             <div class="mb-3">
                 <label asp-for="Frecuencia" class="form-label"></label>
-                <input asp-for="Frecuencia" type="number" min="1" max="5" class="form-control" />
+                <input asp-for="Frecuencia" type="number" min="1" max="5" class="form-control"
+                       oninvalid="if(this.value===''){this.setCustomValidity('La frecuencia es obligatoria.')}else if(this.validity.rangeOverflow){this.setCustomValidity('El valor debe ser menor o igual a 5.')}else if(this.validity.rangeUnderflow){this.setCustomValidity('El valor debe ser mayor o igual a 1.')}else{this.setCustomValidity('Ingresa un número válido.')}"
+                       oninput="this.setCustomValidity('')" />
                 <span asp-validation-for="Frecuencia" class="text-danger"></span>
             </div>
             <div class="mb-3">
