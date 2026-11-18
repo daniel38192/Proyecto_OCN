@@ -122,6 +122,9 @@ public class RegistrosOcnController : Controller
 
         if (registro == null) return NotFound();
 
+        // RegistroOcn no tiene tablas hijas en el modelo; el borrado siempre está habilitado.
+        ViewBag.PuedeEliminar = true;
+
         return View(registro);
     }
 
@@ -133,10 +136,32 @@ public class RegistrosOcnController : Controller
         var registro = await _context.RegistrosOcn.FindAsync(id);
         if (registro != null)
         {
-            _context.RegistrosOcn.Remove(registro);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.RegistrosOcn.Remove(registro);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Red de seguridad: la base (database-first) puede tener FKs
+                // hacia registroocn no mapeadas en el modelo de EF.
+                return await VolverAEliminarConBloqueo(id);
+            }
         }
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>Recarga el registro con sus navegaciones y muestra el aviso de borrado bloqueado.</summary>
+    private async Task<IActionResult> VolverAEliminarConBloqueo(int id)
+    {
+        var registro = await _context.RegistrosOcn
+            .AsNoTracking()
+            .Include(r => r.Zona)
+            .Include(r => r.Problematica)
+            .FirstOrDefaultAsync(r => r.IdRegistroOcn == id);
+
+        ViewBag.PuedeEliminar = false;
+        return registro == null ? RedirectToAction(nameof(Index)) : View("Delete", registro);
     }
 
     private async Task<bool> RegistroExiste(int id)

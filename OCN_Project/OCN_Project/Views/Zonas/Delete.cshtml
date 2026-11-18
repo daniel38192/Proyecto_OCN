@@ -6,6 +6,15 @@
 
 <h1>Eliminar zona</h1>
 <h3>¿Seguro que deseas eliminar esta zona?</h3>
+@if (ViewBag.PuedeEliminar == false)
+{
+    <div class="alert alert-warning">
+        <strong>No se puede eliminar esta zona.</strong>
+        Tiene registros asociados en otros módulos (levantamientos, registros OCN, tendencias de problemáticas,
+        coberturas, barreras, accesibilidades, prioridades calculadas o brechas de atención).
+        Elimine o reasigne esos registros antes de volver a intentarlo.
+    </div>
+}
 <div>
     <h4>Zona</h4>
     <hr />
@@ -28,7 +37,7 @@
 
     <form asp-action="Delete">
         <input type="hidden" asp-for="IdZona" />
-        <input type="submit" value="Eliminar" class="btn btn-danger" />
+        <input type="submit" value="Eliminar" class="btn btn-danger" disabled="@(ViewBag.PuedeEliminar == false)" />
         <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
     </form>
 </div>

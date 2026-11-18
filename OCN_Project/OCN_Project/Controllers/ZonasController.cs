@@ -132,6 +132,9 @@ public class ZonasController : Controller
 
         if (zona == null) return NotFound();
 
+        // Bloquea el borrado si otras tablas referencian la zona (FKs en Restrict).
+        ViewBag.PuedeEliminar = !await TieneRegistrosAsociados(zona.IdZona);
+
         return View(zona);
     }
 
@@ -143,10 +146,50 @@ public class ZonasController : Controller
         var zona = await _context.Zonas.FindAsync(id);
         if (zona != null)
         {
-            _context.Zonas.Remove(zona);
-            await _context.SaveChangesAsync();
+            if (await TieneRegistrosAsociados(id))
+            {
+                return await VolverAEliminarConBloqueo(id);
+            }
+
+            try
+            {
+                _context.Zonas.Remove(zona);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Red de seguridad: la base (database-first) puede tener FKs
+                // adicionales no mapeadas en el modelo de EF.
+                return await VolverAEliminarConBloqueo(id);
+            }
         }
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>Recarga la zona con sus navegaciones y muestra el aviso de borrado bloqueado.</summary>
+    private async Task<IActionResult> VolverAEliminarConBloqueo(int id)
+    {
+        var zona = await _context.Zonas
+            .AsNoTracking()
+            .Include(z => z.Division)
+            .Include(z => z.TipoZona)
+            .FirstOrDefaultAsync(z => z.IdZona == id);
+
+        ViewBag.PuedeEliminar = false;
+        return zona == null ? RedirectToAction(nameof(Index)) : View("Delete", zona);
+    }
+
+    /// <summary>Indica si otras tablas referencian la zona (el borrado sería rechazado por las FK).</summary>
+    private async Task<bool> TieneRegistrosAsociados(int idZona)
+    {
+        return await _context.Levantamientos.AnyAsync(l => l.IdZona == idZona)
+            || await _context.TendenciasProblematica.AnyAsync(t => t.IdZona == idZona)
+            || await _context.RegistrosOcn.AnyAsync(r => r.IdZona == idZona)
+            || await _context.RecursosZonasCobertura.AnyAsync(c => c.IdZona == idZona)
+            || await _context.RecursosZonasBarrera.AnyAsync(b => b.IdZona == idZona)
+            || await _context.RecursosZonasAccesibilidad.AnyAsync(a => a.IdZona == idZona)
+            || await _context.PrioridadesCalculada.AnyAsync(p => p.IdZona == idZona)
+            || await _context.BrechasAtencion.AnyAsync(b => b.IdZona == idZona);
     }
 
     private async Task<bool> ZonaExiste(int id)

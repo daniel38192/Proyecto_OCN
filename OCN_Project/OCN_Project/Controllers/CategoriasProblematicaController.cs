@@ -120,6 +120,9 @@ public class CategoriasProblematicaController : Controller
 
         if (categoria == null) return NotFound();
 
+        // Bloquea el borrado si la categoría tiene problemáticas registradas.
+        ViewBag.PuedeEliminar = !await TieneRegistrosAsociados(categoria.IdCategoria);
+
         return View(categoria);
     }
 
@@ -131,10 +134,41 @@ public class CategoriasProblematicaController : Controller
         var categoria = await _context.CategoriasProblematica.FindAsync(id);
         if (categoria != null)
         {
-            _context.CategoriasProblematica.Remove(categoria);
-            await _context.SaveChangesAsync();
+            if (await TieneRegistrosAsociados(id))
+            {
+                return await VolverAEliminarConBloqueo(id);
+            }
+
+            try
+            {
+                _context.CategoriasProblematica.Remove(categoria);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Red de seguridad: la base (database-first) puede tener FKs
+                // adicionales no mapeadas en el modelo de EF.
+                return await VolverAEliminarConBloqueo(id);
+            }
         }
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>Recarga la categoría y muestra el aviso de borrado bloqueado.</summary>
+    private async Task<IActionResult> VolverAEliminarConBloqueo(int id)
+    {
+        var categoria = await _context.CategoriasProblematica
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.IdCategoria == id);
+
+        ViewBag.PuedeEliminar = false;
+        return categoria == null ? RedirectToAction(nameof(Index)) : View("Delete", categoria);
+    }
+
+    /// <summary>Indica si la categoría tiene problemáticas asociadas.</summary>
+    private async Task<bool> TieneRegistrosAsociados(int idCategoria)
+    {
+        return await _context.Problematicas.AnyAsync(p => p.IdCategoria == idCategoria);
     }
 
     private async Task<bool> CategoriaExiste(int id)

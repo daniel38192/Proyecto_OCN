@@ -128,6 +128,9 @@ public class PeriodosController : Controller
 
         if (periodo == null) return NotFound();
 
+        // Bloquea el borrado si otras tablas referencian el periodo (FKs en Restrict).
+        ViewBag.PuedeEliminar = !await TieneRegistrosAsociados(periodo.IdPeriodo);
+
         return View(periodo);
     }
 
@@ -139,10 +142,44 @@ public class PeriodosController : Controller
         var periodo = await _context.Periodos.FindAsync(id);
         if (periodo != null)
         {
-            _context.Periodos.Remove(periodo);
-            await _context.SaveChangesAsync();
+            if (await TieneRegistrosAsociados(id))
+            {
+                return await VolverAEliminarConBloqueo(id);
+            }
+
+            try
+            {
+                _context.Periodos.Remove(periodo);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Red de seguridad: la base (database-first) puede tener FKs
+                // adicionales no mapeadas en el modelo de EF.
+                return await VolverAEliminarConBloqueo(id);
+            }
         }
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>Recarga el periodo y muestra el aviso de borrado bloqueado.</summary>
+    private async Task<IActionResult> VolverAEliminarConBloqueo(int id)
+    {
+        var periodo = await _context.Periodos
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.IdPeriodo == id);
+
+        ViewBag.PuedeEliminar = false;
+        return periodo == null ? RedirectToAction(nameof(Index)) : View("Delete", periodo);
+    }
+
+    /// <summary>Indica si otras tablas referencian el periodo (el borrado sería rechazado por las FK).</summary>
+    private async Task<bool> TieneRegistrosAsociados(int idPeriodo)
+    {
+        return await _context.Levantamientos.AnyAsync(l => l.IdPeriodo == idPeriodo)
+            || await _context.TendenciasProblematica.AnyAsync(t => t.IdPeriodo == idPeriodo)
+            || await _context.PrioridadesCalculada.AnyAsync(p => p.IdPeriodo == idPeriodo)
+            || await _context.BrechasAtencion.AnyAsync(b => b.IdPeriodo == idPeriodo);
     }
 
     private async Task<bool> PeriodoExiste(int id)

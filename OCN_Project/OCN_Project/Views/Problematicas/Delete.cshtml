@@ -6,6 +6,15 @@
 
 <h1>Eliminar problemática</h1>
 <h3>¿Seguro que deseas eliminar esta problemática?</h3>
+@if (ViewBag.PuedeEliminar == false)
+{
+    <div class="alert alert-warning">
+        <strong>No se puede eliminar esta problemática.</strong>
+        Tiene registros asociados en otros módulos (subproblemáticas, observaciones, tendencias,
+        necesidades, factores de riesgo o protector, prioridades calculadas o registros OCN).
+        Elimine o reasigne esos registros antes de volver a intentarlo.
+    </div>
+}
 <div>
     <h4>Problematica</h4>
     <hr />
@@ -25,7 +34,7 @@
 
     <form asp-action="Delete">
         <input type="hidden" asp-for="IdProblematica" />
-        <input type="submit" value="Eliminar" class="btn btn-danger" />
+        <input type="submit" value="Eliminar" class="btn btn-danger" disabled="@(ViewBag.PuedeEliminar == false)" />
         <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
     </form>
 </div>
