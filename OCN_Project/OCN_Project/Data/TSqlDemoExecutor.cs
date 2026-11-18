@@ -96,7 +96,9 @@ public static class TSqlDemoExecutor
             @idrecurso = @idrecurso,
             @descripcion = @descripcion,
             @lista_usuarios = @lista;
-        SELECT idintervencion;";
+        -- El propio procedimiento termina con SELECT @idintervencion AS idintervencion;
+        -- ExecuteScalar toma ese resultado. (No agregar otro SELECT aquí: un nombre de
+        -- columna sin FROM hace fallar la compilación del lote con error 207.)";
 
     private const string SqlVerIntervencion = @"
         SELECT idintervencion, idtipointervencion, idobservacionproblematica, idrecurso,
@@ -279,7 +281,7 @@ public static class TSqlDemoExecutor
 
     private const string SqlAuditoriaDemo = @"
         SELECT idauditoria, nombretabla, idregistro, operacion, idusuario,
-               valoresanteriores, valoresnuevos, fecha
+               valoresanteriores, valoresnuevos, fechaoperacion
         FROM ocn.auditoria
         WHERE nombretabla = 'intervencion'
           AND idregistro IN (SELECT idintervencion FROM ocn.intervencion WHERE descripcion LIKE @patron)
