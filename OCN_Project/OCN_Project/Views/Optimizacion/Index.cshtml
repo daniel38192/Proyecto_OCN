@@ -1,0 +1,102 @@
+@{
+    ViewData["Title"] = "Optimización de consultas";
+}
+
+<h1>Optimización de consultas (tarea de tuning)</h1>
+<p class="text-muted">
+    Módulo que ejecuta automáticamente el guion de la tarea sobre la base proyecto_ocn:
+    cada caso corre la consulta ANTES, crea el índice, ejecuta la consulta DESPUÉS y limpia
+    la base en un bloque finally. Se capturan STATISTICS IO/TIME, el plan de ejecución real
+    (SET STATISTICS XML) y, en el caso 1, el histograma con DBCC SHOW_STATISTICS.
+</p>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-3 h-100">
+            <div class="card-body">
+                <h5 class="card-title">Caso 1 — Tratamiento completo</h5>
+                <p class="card-text small">
+                    Levantamientos de la zona 1 ordenados por fecha. Índice compuesto
+                    <code>(idzona, fechalevantamiento)</code> con INCLUDE. Incluye histograma
+                    DBCC con lectura automática y comparación ANTES/DESPUÉS completa.
+                </p>
+                <a asp-action="Caso1" class="btn btn-primary">Abrir caso 1</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-3 h-100">
+            <div class="card-body">
+                <h5 class="card-title">Caso 2 — Tratamiento simple</h5>
+                <p class="card-text small">
+                    Intervenciones <code>Planeada</code>/<code>EnProceso</code> de enero 2025.
+                    Índice filtrado. Con veredicto automático: ¿el optimizador realmente usó
+                    el índice filtrado en el plan DESPUÉS?
+                </p>
+                <a asp-action="Caso2" class="btn btn-primary">Abrir caso 2</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-3 h-100">
+            <div class="card-body">
+                <h5 class="card-title">Caso 3 — Tratamiento simple</h5>
+                <p class="card-text small">
+                    Intervenciones con duración mayor a 30 días mediante una columna calculada
+                    <code>persisted</code> (la app la agrega si falta y la elimina al final) y un
+                    índice sobre la columna calculada.
+                </p>
+                <a asp-action="Caso3" class="btn btn-primary">Abrir caso 3</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-2">
+    <div class="card-header">Relación con los requisitos de la tarea</div>
+    <div class="card-body">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Requisito</th>
+                    <th>Dónde se cumple</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <strong>Requisito 1:</strong> plan de ejecución ANTES/DESPUÉS de crear el índice,
+                        con captura de STATISTICS IO y STATISTICS TIME.
+                    </td>
+                    <td>
+                        <a asp-action="Caso1">Caso 1</a> (y también en los casos 2 y 3): cada corrida muestra la
+                        rejilla de resultados, los mensajes de STATISTICS IO/TIME, el resumen del plan real,
+                        el XML descargable como .sqlplan para abrirlo gráficamente en SSMS.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>Requisito 2:</strong> histograma con DBCC SHOW_STATISTICS y su interpretación.
+                    </td>
+                    <td>
+                        <a asp-action="Caso1">Caso 1</a>: después de crear el índice se ejecuta
+                        <code>DBCC SHOW_STATISTICS ... WITH STAT_HEADER, DENSITY_VECTOR, HISTOGRAM</code> y se
+                        muestran los 3 conjuntos de resultados junto con una lectura automática del histograma
+                        orientada al predicado <code>idzona = 1</code>.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>Requisito 3:</strong> documentar al menos una situación donde el índice
+                        <em>no mejoró como esperaban</em>.
+                    </td>
+                    <td>
+                        <a asp-action="Caso2">Caso 2</a>: el veredicto automático detecta si el plan DESPUÉS usó
+                        el índice filtrado; si no lo usó, la página lo marca como evidencia válida de aprendizaje
+                        con la explicación del porqué (el caso 3 tiene la misma detección para su índice).
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

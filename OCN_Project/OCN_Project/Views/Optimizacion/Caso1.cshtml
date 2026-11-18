@@ -1,0 +1,111 @@
+@model OCN_Project.Models.Caso1Resultado?
+@{
+    ViewData["Title"] = "Optimización — Caso 1";
+}
+
+<h1>Caso 1 — Levantamientos por zona (índice compuesto)</h1>
+<p class="text-muted">Tratamiento completo: consulta ANTES → índice compuesto → DBCC SHOW_STATISTICS → consulta DESPUÉS → limpieza.</p>
+
+<div class="card mb-3">
+    <div class="card-header">¿Por qué este índice?</div>
+    <div class="card-body">
+        <p>
+            La consulta filtra por <code>idzona = 1</code> (predicado de <strong>igualdad</strong>) y ordena por
+            <code>fechalevantamiento DESC</code> (rango/orden). Ese patrón pide un índice
+            <strong>compuesto</strong>: la primera clave resuelve el filtro y la segunda mantiene las filas de cada
+            zona ordenadas por fecha, de modo que el <code>ORDER BY</code> se satisface sin operador Sort.
+        </p>
+        <ul>
+            <li>
+                <strong>INCLUDE para índice cubriente:</strong> las columnas restantes
+                (<code>codigolevantamiento, idperiodo, idmetodo, numeroparticipantesaprox</code>) van en
+                <code>INCLUDE</code>; además <code>idlevantamiento</code> (clave primaria agrupada) viaja
+                implícitamente como localizador de fila en cada entrada de un índice no agrupado, así que
+                la consulta se resuelve solo con el índice <strong>sin Key Lookup</strong>.
+            </li>
+            <li>
+                <strong>Nota sobre <code>USING btree</code>:</strong> el guion de la tarea dice
+                <code>using btree</code>, sintaxis de PostgreSQL/Oracle que <span class="text-danger">NO es válida en
+                SQL Server</span> para índices no espaciales (la estructura B-tree ya es la interna por defecto de
+                todos los índices relacionales). Por eso aquí se omite esa cláusula.
+            </li>
+            <li>
+                <strong>Comparación justa:</strong> las dos corridas usan la misma conexión, los mismos datos y el
+                mismo lote <code>SET STATISTICS IO/TIME/XML</code> (caché tibia en ambas), así que la diferencia se
+                atribuye al índice y no al entorno. El índice se crea y se elimina dentro de la misma corrida para
+                dejar la base como estaba.
+            </li>
+        </ul>
+        <pre class="border bg-light p-2 small mb-0">create index idx_levantamiento_idzona_fechalevantamiento
+on ocn.levantamiento (idzona, fechalevantamiento)
+include (codigolevantamiento, idperiodo, idmetodo, numeroparticipantesaprox)</pre>
+    </div>
+</div>
+
+<form asp-action="EjecutarCaso1" method="post" class="mb-4">
+    <button type="submit" class="btn btn-primary">Ejecutar comparación antes/después</button>
+</form>
+
+@if (Model != null)
+{
+    <hr />
+
+    @if (Model.Error != null)
+    {
+        <div class="alert alert-danger">
+            <strong>Error durante la corrida:</strong> @Model.Error — la limpieza se ejecutó igualmente (revisa los pasos).
+        </div>
+    }
+
+    @if (Model.Antes != null && Model.Despues != null && Model.Antes.TotalLecturasLogicas > 0)
+    {
+        var antes = Model.Antes.TotalLecturasLogicas;
+        var despues = Model.Despues.TotalLecturasLogicas;
+        <div class="alert alert-@(despues < antes ? "success" : "warning")">
+            <strong>Comparación rápida:</strong> lecturas lógicas totales ANTES = @antes → DESPUÉS = @despues.
+            @(despues < antes
+                ? "Disminuyeron: el índice leyó menos páginas en cada corrida."
+                : "No disminuyeron: revisa los dos planes (costos y operadores) para explicar la decisión del optimizador.")
+        </div>
+    }
+
+    @if (Model.Antes != null)
+    {
+        <partial name="_SeccionResultado" model="Model.Antes" />
+    }
+    @if (Model.Despues != null)
+    {
+        <partial name="_SeccionResultado" model="Model.Despues" />
+    }
+
+    <div class="card mb-3 border-info">
+        <div class="card-header">DBCC SHOW_STATISTICS — estadística del índice @Model.NombreIndice</div>
+        <div class="card-body">
+            <h6>1) STAT_HEADER</h6>
+            <partial name="_TablaDatos" model="Model.Encabezado" />
+
+            <h6 class="mt-3">2) DENSITY_VECTOR</h6>
+            <partial name="_TablaDatos" model="Model.Densidades" />
+
+            <h6 class="mt-3">3) HISTOGRAM</h6>
+            <partial name="_TablaDatos" model="Model.Histograma" />
+
+            @if (!string.IsNullOrEmpty(Model.LecturaHistograma))
+            {
+                <div class="alert alert-info mt-3 mb-0">@Model.LecturaHistograma</div>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">Pasos ejecutados</div>
+        <div class="card-body py-2">
+            <ul class="list-group list-group-flush">
+                @foreach (var paso in Model.Pasos)
+                {
+                    <li class="list-group-item @(paso.StartsWith("ERROR", StringComparison.Ordinal) ? "list-group-item-danger" : "")">@paso</li>
+                }
+            </ul>
+        </div>
+    </div>
+}

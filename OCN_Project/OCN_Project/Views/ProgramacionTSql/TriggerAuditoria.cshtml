@@ -1,0 +1,18 @@
+@model OCN_Project.Models.DemoResultado?
+@{
+    ViewData["Title"] = "Trigger de auditoría";
+}
+
+<h1>Trigger de auditoría de estado</h1>
+<p class="text-muted">
+    Demostración en vivo de <code>ocn.trg_intervencion_auditar_estado</code> (AFTER UPDATE): registra en
+    <code>ocn.auditoria</code> el valor anterior y nuevo del estado en JSON, y gracias a la guarda
+    <code>UPDATE(estado)</code> ignora las ediciones que no tocan el estado.
+    Todas las filas creadas se limpian al terminar.
+</p>
+
+<form asp-action="TriggerAuditoriaPost" method="post" class="mb-3">
+    <button type="submit" class="btn btn-primary">Ejecutar demostración</button>
+</form>
+
+<partial name="_DemoResultado" model="Model" />

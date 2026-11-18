@@ -1,0 +1,18 @@
+@model OCN_Project.Models.DemoResultado?
+@{
+    ViewData["Title"] = "Procedimiento transaccional";
+}
+
+<h1>Procedimiento almacenado transaccional</h1>
+<p class="text-muted">
+    Demostración en vivo de <code>ocn.usp_registrar_intervencion</code>: una transacción explícita que inserta la
+    intervención y sus responsables con un parámetro de tabla (TVP). Primero se ejecuta un caso de éxito (COMMIT) y
+    después un caso de fallo con violación de llave foránea (ROLLBACK + bitácora en <code>ocn.errorprocedimiento</code>).
+    Todas las filas creadas se limpian al terminar: la base queda exactamente como estaba.
+</p>
+
+<form asp-action="ProcedimientoTransaccionalPost" method="post" class="mb-3">
+    <button type="submit" class="btn btn-primary">Ejecutar demostración</button>
+</form>
+
+<partial name="_DemoResultado" model="Model" />

@@ -1,0 +1,17 @@
+@model OCN_Project.Models.DemoResultado?
+@{
+    ViewData["Title"] = "Trigger de eliminación";
+}
+
+<h1>Trigger de protección contra eliminación</h1>
+<p class="text-muted">
+    Demostración en vivo de <code>ocn.trg_intervencion_impedir_eliminar_completada</code> (AFTER DELETE): si alguna
+    fila en <code>deleted</code> está 'Completada' hace ROLLBACK y lanza el error 50002. También se muestra que
+    eliminar una fila 'Planeada' sí funciona. Todas las filas creadas se limpian al terminar.
+</p>
+
+<form asp-action="TriggerEliminacionPost" method="post" class="mb-3">
+    <button type="submit" class="btn btn-primary">Ejecutar demostración</button>
+</form>
+
+<partial name="_DemoResultado" model="Model" />

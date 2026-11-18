@@ -1,0 +1,18 @@
+@model OCN_Project.Models.DemoResultado?
+@{
+    ViewData["Title"] = "Cursor";
+}
+
+<h1>Cursor en procedimiento almacenado</h1>
+<p class="text-muted">
+    Demostración en vivo de <code>ocn.usp_procesar_intervenciones_antiguas_cursor</code>: un cursor
+    <code>LOCAL FAST_FORWARD</code> recorre fila a fila las intervenciones 'Planeada' con más de 30 días de registro y las
+    pasa a 'EnProceso' (disparando de paso el trigger de auditoría). También se prueba la validación
+    <code>@@dias &lt; 0</code> que lanza el error 50003. Todas las filas creadas se limpian al terminar.
+</p>
+
+<form asp-action="CursorPost" method="post" class="mb-3">
+    <button type="submit" class="btn btn-primary">Ejecutar demostración</button>
+</form>
+
+<partial name="_DemoResultado" model="Model" />

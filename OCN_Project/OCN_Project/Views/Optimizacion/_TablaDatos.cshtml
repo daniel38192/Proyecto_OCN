@@ -1,0 +1,32 @@
+@model OCN_Project.Models.TablaDatos
+@* Tabla genérica de resultados SQL: las celdas ya llegan formateadas como texto. *@
+@if (Model.Columnas.Count == 0)
+{
+    <p class="text-muted mb-0">(sin datos)</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-sm">
+            <thead>
+                <tr>
+                    @foreach (var columna in Model.Columnas)
+                    {
+                        <th>@columna</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var fila in Model.Filas)
+                {
+                    <tr>
+                        @foreach (var celda in fila)
+                        {
+                            <td>@(celda == "NULL" ? Html.Raw("<span class=\"text-muted\">NULL</span>") : celda)</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

@@ -1,0 +1,101 @@
+@model OCN_Project.Models.CasoComparacionResultado?
+@{
+    ViewData["Title"] = "Optimización — Caso 3";
+}
+
+<h1>Caso 3 — Duración de intervenciones (columna calculada persistida)</h1>
+<p class="text-muted">Tratamiento simple con gestión de la columna: verificar/agregar columna → consulta ANTES → índice sobre la columna calculada → consulta DESPUÉS → limpieza.</p>
+
+<div class="card mb-3">
+    <div class="card-header">Sobre las columnas calculadas persistidas</div>
+    <div class="card-body">
+        <p>
+            <code>duracion</code> se define como columna <strong>calculada</strong>
+            (<code>datediff(day, fecharegistro, fechacompletado)</code>) con <code>PERSISTED</code>: el valor se
+            materializa físicamente al insertar/actualizar en lugar de recompute en cada lectura. Eso permite
+            crear <strong>estadísticas e índices sobre la columna</strong>, de modo que el filtro
+            <code>where duracion > 30</code> se resuelve con un seek/scan del índice en lugar de calcular la
+            duración fila por fila durante el escaneo.
+        </p>
+        <ul>
+            <li>
+                <strong>La app administra la columna:</strong> si <code>duracion</code> no existe, se agrega con
+                <code>ALTER TABLE ... ADD ... PERSISTED</code> al inicio y se <strong>elimina al final</strong>
+                (solo si la app la agregó). Si ya existía (creada por el estudiante), se respeta y no se toca.
+                El índice siempre se elimina al terminar, pase lo que pase.
+            </li>
+            <li>
+                Al igual que en el caso 2, el veredicto automático detecta si el plan DESPUÉS realmente usó el
+                índice sobre la columna calculada; si no lo usó, es <strong>evidencia válida de aprendizaje</strong>
+                (requisito 3 de la tarea).
+            </li>
+        </ul>
+        <pre class="border bg-light p-2 small mb-0">alter table ocn.intervencion
+add duracion as datediff(day, [fecharegistro], [fechacompletado]) persisted
+
+create nonclustered index idx_intervencion_duracion_computed
+on ocn.intervencion (duracion)
+include (idtipointervencion, idobservacionproblematica, idrecurso, fecharegistro, fechacompletado, estado)</pre>
+    </div>
+</div>
+
+<form asp-action="EjecutarCaso3" method="post" class="mb-4">
+    <button type="submit" class="btn btn-primary">Ejecutar comparación antes/después</button>
+</form>
+
+@if (Model != null)
+{
+    <hr />
+
+    @if (Model.Error != null)
+    {
+        <div class="alert alert-danger">
+            <strong>Error durante la corrida:</strong> @Model.Error — la limpieza se ejecutó igualmente (revisa los pasos).
+        </div>
+    }
+
+    @if (Model.Exito)
+    {
+        @if (Model.IndiceUsadoEnDespues)
+        {
+            <div class="alert alert-success">
+                <strong>El optimizador SÍ usó el índice de la columna calculada:</strong> el plan DESPUÉS contiene un
+                Index Seek/Index Scan sobre <code>@Model.NombreIndice</code>.
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                <strong>El optimizador NO usó el índice de la columna calculada.</strong> @Model.NotaAprendizaje
+            </div>
+        }
+    }
+
+    @if (Model.Antes != null)
+    {
+        <partial name="_SeccionResultado" model="Model.Antes" />
+    }
+    @if (Model.Despues != null)
+    {
+        <partial name="_SeccionResultado" model="Model.Despues" />
+    }
+
+    <div class="card mb-3">
+        <div class="card-header">Pasos ejecutados</div>
+        <div class="card-body py-2">
+            <ul class="list-group list-group-flush">
+                @foreach (var paso in Model.Pasos)
+                {
+                    <li class="list-group-item @(paso.StartsWith("ERROR", StringComparison.Ordinal) ? "list-group-item-danger" : "")">@paso</li>
+                }
+            </ul>
+            @if (Model.ColumnaCalculadaAgregadaYEliminada)
+            {
+                <p class="text-muted small mt-2 mb-0">
+                    Nota: esta corrida agregó la columna calculada <code>duracion</code> porque no existía y la
+                    eliminó al terminar; la base quedó como estaba.
+                </p>
+            }
+        </div>
+    </div>
+}

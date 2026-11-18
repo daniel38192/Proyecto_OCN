@@ -18,6 +18,10 @@ builder.Services.AddControllersWithViews(options =>
 builder.Services.AddDbContext<OcnDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("OcnConnection")));
 
+// IMemoryCache: guarda temporalmente los planes XML capturados (claves GUID)
+// para poder descargarlos como .sqlplan desde Optimizacion/DescargarPlan.
+builder.Services.AddMemoryCache();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
