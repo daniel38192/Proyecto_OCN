@@ -40,6 +40,10 @@ public class RegistroOcn
     [DataType(DataType.DateTime)]
     public DateTime FechaRegistro { get; set; }
 
+    /// <summary>Indica si el registro está activo. Al eliminar se marca en 0 (borrado lógico).</summary>
+    [Display(Name = "Activo")]
+    public bool Activo { get; set; } = true;
+
     [ForeignKey(nameof(IdZona))]
     public Zona? Zona { get; set; }
 

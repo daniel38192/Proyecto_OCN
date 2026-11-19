@@ -9,6 +9,7 @@ namespace OCN_Project.Controllers;
 /// <summary>
 /// CRUD del módulo principal RegistrosOCN: FKs a Zona y Problematica,
 /// validación de rango 1-5 en Intensidad/Frecuencia y AntiForgeryToken.
+/// El borrado es lógico: al eliminar se marca Activo = 0 (no se elimina el registro de la BD).
 /// </summary>
 public class RegistrosOcnController : Controller
 {
@@ -24,6 +25,7 @@ public class RegistrosOcnController : Controller
     {
         var registros = _context.RegistrosOcn
             .AsNoTracking()
+            .Where(r => r.Activo)
             .Include(r => r.Zona)
             .Include(r => r.Problematica)
             .OrderByDescending(r => r.FechaRegistro);
@@ -38,6 +40,7 @@ public class RegistrosOcnController : Controller
 
         var registro = await _context.RegistrosOcn
             .AsNoTracking()
+            .Where(r => r.Activo)
             .Include(r => r.Zona)
             .Include(r => r.Problematica)
             .FirstOrDefaultAsync(r => r.IdRegistroOcn == id);
@@ -77,7 +80,7 @@ public class RegistrosOcnController : Controller
         if (id == null) return NotFound();
 
         var registro = await _context.RegistrosOcn.FindAsync(id);
-        if (registro == null) return NotFound();
+        if (registro == null || !registro.Activo) return NotFound();
 
         PoblarListasDesplegables(registro.IdZona, registro.IdProblematica);
         return View(registro);
@@ -116,14 +119,12 @@ public class RegistrosOcnController : Controller
 
         var registro = await _context.RegistrosOcn
             .AsNoTracking()
+            .Where(r => r.Activo)
             .Include(r => r.Zona)
             .Include(r => r.Problematica)
             .FirstOrDefaultAsync(r => r.IdRegistroOcn == id);
 
         if (registro == null) return NotFound();
-
-        // RegistroOcn no tiene tablas hijas en el modelo; el borrado siempre está habilitado.
-        ViewBag.PuedeEliminar = true;
 
         return View(registro);
     }
@@ -134,39 +135,18 @@ public class RegistrosOcnController : Controller
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var registro = await _context.RegistrosOcn.FindAsync(id);
-        if (registro != null)
+        if (registro != null && registro.Activo)
         {
-            try
-            {
-                _context.RegistrosOcn.Remove(registro);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                // Red de seguridad: la base (database-first) puede tener FKs
-                // hacia registroocn no mapeadas en el modelo de EF.
-                return await VolverAEliminarConBloqueo(id);
-            }
+            // Borrado lógico: no se elimina el registro de la base de datos, se marca como inactivo.
+            registro.Activo = false;
+            await _context.SaveChangesAsync();
         }
         return RedirectToAction(nameof(Index));
     }
 
-    /// <summary>Recarga el registro con sus navegaciones y muestra el aviso de borrado bloqueado.</summary>
-    private async Task<IActionResult> VolverAEliminarConBloqueo(int id)
-    {
-        var registro = await _context.RegistrosOcn
-            .AsNoTracking()
-            .Include(r => r.Zona)
-            .Include(r => r.Problematica)
-            .FirstOrDefaultAsync(r => r.IdRegistroOcn == id);
-
-        ViewBag.PuedeEliminar = false;
-        return registro == null ? RedirectToAction(nameof(Index)) : View("Delete", registro);
-    }
-
     private async Task<bool> RegistroExiste(int id)
     {
-        return await _context.RegistrosOcn.AnyAsync(r => r.IdRegistroOcn == id);
+        return await _context.RegistrosOcn.AnyAsync(r => r.IdRegistroOcn == id && r.Activo);
     }
 
     private void PoblarListasDesplegables(int? idZona = null, int? idProblematica = null)

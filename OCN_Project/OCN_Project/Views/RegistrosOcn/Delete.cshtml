@@ -6,13 +6,9 @@
 
 <h1>Eliminar registro OCN</h1>
 <h3>¿Seguro que deseas eliminar este registro?</h3>
-@if (ViewBag.PuedeEliminar == false)
-{
-    <div class="alert alert-warning">
-        <strong>No se puede eliminar este registro.</strong>
-        Está referenciado por otros datos en la base; elimine o reasigne esos registros antes de volver a intentarlo.
-    </div>
-}
+<div class="alert alert-info">
+    El registro no se eliminará físicamente de la base de datos: se marcará como inactivo (<strong>Activo = 0</strong>).
+</div>
 <div>
     <h4>RegistroOcn</h4>
     <hr />
@@ -38,7 +34,7 @@
 
     <form asp-action="Delete">
         <input type="hidden" asp-for="IdRegistroOcn" />
-        <input type="submit" value="Eliminar" class="btn btn-danger" disabled="@(ViewBag.PuedeEliminar == false)" />
+        <input type="submit" value="Eliminar" class="btn btn-danger" />
         <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
     </form>
 </div>

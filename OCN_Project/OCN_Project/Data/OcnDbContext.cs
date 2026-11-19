@@ -414,6 +414,9 @@ public class OcnDbContext : DbContext
             .HasOne(x => x.Zona).WithMany(z => z.RegistrosOcn).HasForeignKey(x => x.IdZona);
         modelBuilder.Entity<RegistroOcn>()
             .HasOne(x => x.Problematica).WithMany(p => p.RegistrosOcn).HasForeignKey(x => x.IdProblematica);
+        modelBuilder.Entity<RegistroOcn>()
+            .Property(x => x.Activo)
+            .HasDefaultValue(true);
 
         // ---------- relaciones: auditoría ----------
         modelBuilder.Entity<Auditoria>()
